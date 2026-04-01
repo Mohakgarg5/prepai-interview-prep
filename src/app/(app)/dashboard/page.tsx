@@ -73,9 +73,9 @@ export default async function DashboardPage() {
   const thirtyDaysAgo = new Date()
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
   const recentActivity = progressEntries.filter(
-    (e) => new Date(e.createdAt) > thirtyDaysAgo
+    (e: { createdAt: Date }) => new Date(e.createdAt) > thirtyDaysAgo
   )
-  const recentActivityDays = recentActivity.map((e) =>
+  const recentActivityDays = recentActivity.map((e: { createdAt: Date }) =>
     Math.floor((Date.now() - new Date(e.createdAt).getTime()) / (1000 * 60 * 60 * 24))
   )
 
