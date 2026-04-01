@@ -65,7 +65,7 @@ export default async function DashboardPage() {
     ])
 
   // Calculate readiness score
-  const categoriesPracticed: string[] = [...new Set(mockSessions.map((s: { category: string }) => s.category))]
+  const categoriesPracticed: string[] = Array.from(new Set(mockSessions.map((s: { category: string }) => s.category)))
   const mockSessionScores = (mockSessions as Array<{ overallScore: number | null; category: string; createdAt: Date }>)
     .filter((s) => s.overallScore !== null)
     .map((s) => s.overallScore!)
