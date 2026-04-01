@@ -1,0 +1,416 @@
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
+}
+
+datasource db {
+  provider   = "postgresql"
+  extensions = [pgvector(map: "vector")]
+}
+
+// ==================== USER & PROFILE ====================
+
+model User {
+  id              String   @id @default(cuid())
+  email           String   @unique
+  emailVerified   DateTime?
+  name            String?
+  image           String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Onboarding data
+  targetRole      TargetRole    @default(GENERAL_PM)
+  experienceLevel ExperienceLevel @default(MID)
+  interviewTimeline DateTime?
+  weakAreas       String[]
+
+  // Relations
+  targetCompanies  TargetCompany[]
+  mockSessions     MockSession[]
+  stories          BehavioralStory[]
+  debriefs         Debrief[]
+  teardowns        TeardownAttempt[]
+  progressEntries  ProgressEntry[]
+  savedJobs        SavedJob[]
+  streakData       StreakData?
+  lessonProgress    UserLessonProgress[]
+  pathEnrollments   UserPathEnrollment[]
+
+  accounts Account[]
+  sessions Session[]
+}
+
+enum TargetRole {
+  GENERAL_PM
+  AI_PM
+  TECHNICAL_PM
+  GROWTH_PM
+}
+
+enum ExperienceLevel {
+  NEW_GRAD
+  JUNIOR
+  MID
+  SENIOR
+  DIRECTOR_PLUS
+}
+
+model TargetCompany {
+  id        String @id @default(cuid())
+  userId    String
+  user      User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name      String
+  tier      CompanyTier @default(MID_STAGE)
+  notes     String?
+  createdAt DateTime    @default(now())
+}
+
+enum CompanyTier {
+  FAANG
+  BIG_TECH
+  MID_STAGE
+  STARTUP
+  ENTERPRISE
+  OTHER
+}
+
+// ==================== MOCK INTERVIEWS ====================
+
+model MockSession {
+  id              String   @id @default(cuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt       DateTime @default(now())
+  completedAt     DateTime?
+
+  // Config
+  category        InterviewCategory
+  difficulty      Difficulty @default(MEDIUM)
+  companyContext   String?
+  jobContext       String?
+  timedMode       Boolean    @default(false)
+  timeLimitMinutes Int?
+
+  // Results
+  overallScore    Float?
+  structureScore  Float?
+  clarityScore    Float?
+  depthScore      Float?
+  creativityScore Float?
+  feedback        String?
+
+  // Conversation
+  messages        MockMessage[]
+}
+
+enum InterviewCategory {
+  PRODUCT_SENSE
+  EXECUTION
+  STRATEGY
+  BEHAVIORAL
+  ESTIMATION
+  TECHNICAL_AI
+  ML_SYSTEM_DESIGN
+  AI_ETHICS
+  METRICS
+  PRODUCT_DESIGN
+}
+
+enum Difficulty {
+  EASY
+  MEDIUM
+  HARD
+  FAANG_LEVEL
+}
+
+model MockMessage {
+  id        String   @id @default(cuid())
+  sessionId String
+  session   MockSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  role      MessageRole
+  content   String
+  metadata  Json?
+  createdAt DateTime    @default(now())
+  order     Int
+}
+
+enum MessageRole {
+  INTERVIEWER
+  CANDIDATE
+  FEEDBACK
+  HINT
+  FOLLOWUP
+  SYSTEM
+}
+
+// ==================== BEHAVIORAL STORIES ====================
+
+model BehavioralStory {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  title       String
+  rawContent  String
+  situation   String?
+  task        String?
+  action      String?
+  result      String?
+
+  themes      BehavioralTheme[]
+  companies   String[]
+  strength    Int       @default(3)
+}
+
+enum BehavioralTheme {
+  LEADERSHIP
+  CONFLICT_RESOLUTION
+  FAILURE_AND_LEARNING
+  DATA_DRIVEN_DECISION
+  AMBIGUITY
+  CROSS_FUNCTIONAL
+  CUSTOMER_OBSESSION
+  INNOVATION
+  PRIORITIZATION
+  INFLUENCE_WITHOUT_AUTHORITY
+  TECHNICAL_DEPTH
+  STAKEHOLDER_MANAGEMENT
+}
+
+// ==================== PRODUCT TEARDOWNS ====================
+
+model TeardownAttempt {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+
+  productName String
+  mode        TeardownMode
+  prompt      String
+  response    String
+  feedback    String?
+  score       Float?
+}
+
+enum TeardownMode {
+  IMPROVE_FEATURE
+  DEFINE_NORTH_STAR
+  PRIORITIZE_ROADMAP
+  DESIGN_V2
+  COMPETITIVE_ANALYSIS
+  DEFINE_METRICS
+}
+
+// ==================== INTERVIEW DEBRIEFS ====================
+
+model Debrief {
+  id              String   @id @default(cuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt       DateTime @default(now())
+
+  companyName     String
+  roleName        String
+  interviewDate   DateTime
+  interviewRound  String?
+  interviewerName String?
+
+  questionsAsked  Json
+  overallFeeling  Int
+  whatWentWell    String?
+  whatWentPoorly  String?
+  surprises       String?
+
+  aiAnalysis      String?
+  areasToImprove  String[]
+  followUpPlan    String?
+}
+
+// ==================== JOB SEARCH & SAVED JOBS ====================
+
+model SavedJob {
+  id              String   @id @default(cuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt       DateTime @default(now())
+
+  title           String
+  company         String
+  location        String?
+  url             String?
+  jdContent       String?
+
+  keyRequirements String[]
+  suggestedPrep   Json?
+  matchScore      Float?
+
+  status          JobStatus @default(SAVED)
+}
+
+enum JobStatus {
+  SAVED
+  APPLIED
+  PHONE_SCREEN
+  INTERVIEWING
+  OFFER
+  REJECTED
+  WITHDRAWN
+}
+
+// ==================== PROGRESS & GAMIFICATION ====================
+
+model ProgressEntry {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+
+  category    InterviewCategory
+  activity    ActivityType
+  score       Float?
+  timeSpent   Int
+  metadata    Json?
+}
+
+enum ActivityType {
+  MOCK_INTERVIEW
+  TEARDOWN
+  FRAMEWORK_STUDY
+  STORY_CRAFTING
+  COMPANY_RESEARCH
+  DEBRIEF
+  PANIC_MODE_REVIEW
+  LESSON_COMPLETE
+}
+
+model StreakData {
+  id              String   @id @default(cuid())
+  userId          String   @unique
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  currentStreak   Int      @default(0)
+  longestStreak   Int      @default(0)
+  lastActivityDate DateTime?
+  freezesRemaining Int     @default(2)
+  totalActiveDays  Int     @default(0)
+}
+
+// ==================== AUTH (NextAuth) ====================
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// ==================== LEARN MODULE ====================
+
+model KnowledgeChunk {
+  id         String                      @id @default(cuid())
+  source     String                      // "product-book" | "kellogg" | "frameworks"
+  chapterRef String                      // e.g., "ch3", "module-4"
+  content    String
+  embedding  Unsupported("vector(1536)")
+  createdAt  DateTime                    @default(now())
+}
+
+model LearningPath {
+  id          String               @id @default(cuid())
+  slug        String               @unique
+  title       String
+  description String
+  icon        String
+  order       Int
+  modules     LearningModule[]
+  enrollments UserPathEnrollment[]
+}
+
+model LearningModule {
+  id               String           @id @default(cuid())
+  pathId           String
+  path             LearningPath     @relation(fields: [pathId], references: [id])
+  slug             String
+  title            String
+  description      String
+  weekNumber       Int?
+  estimatedMinutes Int
+  order            Int
+  lessons          LearningLesson[]
+
+  @@unique([pathId, slug])
+}
+
+model LearningLesson {
+  id                String               @id @default(cuid())
+  moduleId          String
+  module            LearningModule       @relation(fields: [moduleId], references: [id])
+  slug              String
+  title             String
+  content           String               @default("")
+  keyTakeaways      String[]
+  practiceQuestions String[]
+  interviewTip      String?
+  sourceRefs        String[]
+  estimatedMinutes  Int
+  order             Int
+  progress          UserLessonProgress[]
+
+  @@unique([moduleId, slug])
+}
+
+model UserLessonProgress {
+  id          String         @id @default(cuid())
+  userId      String
+  user        User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lessonId    String
+  lesson      LearningLesson @relation(fields: [lessonId], references: [id])
+  completedAt DateTime?
+  quizScore   Float?
+  timeSpentMs Int            @default(0)
+
+  @@unique([userId, lessonId])
+}
+
+model UserPathEnrollment {
+  id          String       @id @default(cuid())
+  userId      String
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  pathId      String
+  path        LearningPath @relation(fields: [pathId], references: [id])
+  startedAt   DateTime     @default(now())
+  completedAt DateTime?
+  currentWeek Int          @default(1)
+
+  @@unique([userId, pathId])
+}
