@@ -343,6 +343,8 @@ model KnowledgeChunk {
   content    String
   embedding  Unsupported("vector(1536)")
   createdAt  DateTime                    @default(now())
+
+  @@index([source])
 }
 
 model LearningPath {
@@ -359,7 +361,7 @@ model LearningPath {
 model LearningModule {
   id               String           @id @default(cuid())
   pathId           String
-  path             LearningPath     @relation(fields: [pathId], references: [id])
+  path             LearningPath     @relation(fields: [pathId], references: [id], onDelete: Cascade)
   slug             String
   title            String
   description      String
@@ -374,7 +376,7 @@ model LearningModule {
 model LearningLesson {
   id                String               @id @default(cuid())
   moduleId          String
-  module            LearningModule       @relation(fields: [moduleId], references: [id])
+  module            LearningModule       @relation(fields: [moduleId], references: [id], onDelete: Cascade)
   slug              String
   title             String
   content           String               @default("")
@@ -394,7 +396,7 @@ model UserLessonProgress {
   userId      String
   user        User           @relation(fields: [userId], references: [id], onDelete: Cascade)
   lessonId    String
-  lesson      LearningLesson @relation(fields: [lessonId], references: [id])
+  lesson      LearningLesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
   completedAt DateTime?
   quizScore   Float?
   timeSpentMs Int            @default(0)
