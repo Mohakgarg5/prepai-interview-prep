@@ -64,6 +64,9 @@ export default async function DashboardPage() {
       }),
     ])
 
+  type ProgressEntryRow = { id: string; createdAt: Date; activity: string; category: string; score: number | null; timeSpent: number; metadata: unknown; userId: string }
+  const typedEntries = progressEntries as ProgressEntryRow[]
+
   // Calculate readiness score
   const categoriesPracticed: string[] = Array.from(new Set(mockSessions.map((s: { category: string }) => s.category)))
   const mockSessionScores = (mockSessions as Array<{ overallScore: number | null; category: string; createdAt: Date }>)
@@ -72,10 +75,10 @@ export default async function DashboardPage() {
 
   const thirtyDaysAgo = new Date()
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
-  const recentActivity = progressEntries.filter(
-    (e: { createdAt: Date }) => new Date(e.createdAt) > thirtyDaysAgo
+  const recentActivity = typedEntries.filter(
+    (e) => new Date(e.createdAt) > thirtyDaysAgo
   )
-  const recentActivityDays = recentActivity.map((e: { createdAt: Date }) =>
+  const recentActivityDays = recentActivity.map((e) =>
     Math.floor((Date.now() - new Date(e.createdAt).getTime()) / (1000 * 60 * 60 * 24))
   )
 
@@ -93,7 +96,7 @@ export default async function DashboardPage() {
 
   // Category scores for chart
   const categoryMap = new Map<string, { scores: number[]; count: number }>()
-  for (const entry of progressEntries) {
+  for (const entry of typedEntries) {
     if (!categoryMap.has(entry.category)) {
       categoryMap.set(entry.category, { scores: [], count: 0 })
     }
@@ -186,7 +189,7 @@ export default async function DashboardPage() {
       {(() => {
         if (!activeEnrollment) return null
         const path = activeEnrollment.path
-        const completedLessonIds = progressEntries
+        const completedLessonIds = typedEntries
           .filter((e) => e.activity === 'LESSON_COMPLETE')
           .map((e) => (e.metadata as Record<string, string> | null)?.lessonId)
           .filter(Boolean) as string[]
@@ -245,7 +248,7 @@ export default async function DashboardPage() {
             Recent Activity
           </h2>
           <RecentActivity
-            activities={progressEntries.slice(0, 5).map((e) => ({
+            activities={typedEntries.slice(0, 5).map((e) => ({
               ...e,
               createdAt: e.createdAt.toISOString(),
             }))}
