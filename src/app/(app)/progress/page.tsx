@@ -96,7 +96,7 @@ export default function ProgressPage() {
     )
   }
 
-  if (!data) {
+  if (!data || !data.categoryScores || !data.weeklyActivity) {
     return (
       <div className="p-6 text-slate-500 text-center">Failed to load progress data.</div>
     )
