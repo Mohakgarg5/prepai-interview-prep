@@ -47,3 +47,4 @@ next-env.d.ts
 *.jpeg
 .playwright-mcp/
 interview-prep-tool/
+.env*.local

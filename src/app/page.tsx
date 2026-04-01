@@ -1,11 +1,10 @@
 import { redirect } from 'next/navigation'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
+import { getSession } from '@/lib/auth'
 import Link from 'next/link'
 import { Layers, BookOpen, Mic, Target, TrendingUp, Zap } from 'lucide-react'
 
 export default async function RootPage() {
-  const session = await getServerSession(authOptions)
+  const session = await getSession()
   if (session?.user) {
     redirect('/dashboard')
   }

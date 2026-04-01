@@ -1,5 +1,4 @@
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
+import { getSession } from '@/lib/auth'
 import { redirect, notFound } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
 import Link from 'next/link'
@@ -7,7 +6,7 @@ import { ArrowLeft, TrendingUp } from 'lucide-react'
 
 export default async function DebriefDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
-  const session = await getServerSession(authOptions)
+  const session = await getSession()
   if (!session?.user) redirect('/signin')
   const userId = (session.user as { id?: string }).id!
 

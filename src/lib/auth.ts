@@ -1,7 +1,16 @@
-import { NextAuthOptions } from 'next-auth'
+import { NextAuthOptions, getServerSession as nextAuthGetServerSession } from 'next-auth'
 import GoogleProvider from 'next-auth/providers/google'
 import { PrismaAdapter } from '@auth/prisma-adapter'
 import { prisma } from './prisma'
+
+/** Safe wrapper — returns null on DB/connection errors instead of crashing */
+export async function getSession() {
+  try {
+    return await nextAuthGetServerSession(authOptions)
+  } catch {
+    return null
+  }
+}
 
 export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma) as NextAuthOptions['adapter'],

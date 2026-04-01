@@ -1,5 +1,4 @@
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
+import { getSession } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
 import { calculateReadinessScore, daysUntil } from '@/lib/utils'
@@ -15,7 +14,7 @@ import { Calendar } from 'lucide-react'
 import { ResumeLearningCard } from '@/components/learn/ResumeLearningCard'
 
 export default async function DashboardPage() {
-  const session = await getServerSession(authOptions)
+  const session = await getSession()
   if (!session?.user) redirect('/signin')
 
   const userId = (session.user as { id?: string }).id!

@@ -1,5 +1,4 @@
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
+import { getSession } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import { FRAMEWORKS_DATA } from '@/lib/constants'
 import { KnowledgeSearch } from '@/components/shared/KnowledgeSearch'
@@ -70,7 +69,7 @@ export default async function KnowledgePage({
 }: {
   searchParams: Promise<{ q?: string; cat?: string }>
 }) {
-  const session = await getServerSession(authOptions)
+  const session = await getSession()
   if (!session?.user) redirect('/signin')
 
   const { q, cat } = await searchParams

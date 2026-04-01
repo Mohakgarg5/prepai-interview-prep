@@ -1,12 +1,11 @@
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
+import { getSession } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import { TutorChat } from '@/components/learn/TutorChat'
 import { Bot, ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
 
 export default async function TutorPage() {
-  const session = await getServerSession(authOptions)
+  const session = await getSession()
   if (!session?.user) redirect('/signin')
 
   const suggestedQuestions = [
