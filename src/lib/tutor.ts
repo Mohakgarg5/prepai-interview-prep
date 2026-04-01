@@ -4,6 +4,8 @@ import type { KnowledgeChunk, TutorMessage } from '@/types/learn'
 
 const EMBEDDING_MODEL = 'text-embedding-3-small'
 const TOP_K = 5
+const TOP_K_DIVERSE = 20  // fetch more, then pick diverse subset
+const MAX_PER_SOURCE = 2  // max chunks from same source to avoid one book dominating
 
 function getOpenAIClient() {
   const apiKey = process.env.OPENAI_API_KEY
@@ -24,26 +26,36 @@ export async function retrieveChunks(query: string, sourceFilter?: string): Prom
   const embedding = await embedText(query)
   const embeddingStr = `[${embedding.join(',')}]`
 
-  let results: KnowledgeChunk[]
-
   if (sourceFilter) {
-    results = await prisma.$queryRaw<KnowledgeChunk[]>`
+    return prisma.$queryRaw<KnowledgeChunk[]>`
       SELECT id, source, "chapterRef", content
       FROM "KnowledgeChunk"
       WHERE source = ${sourceFilter}
       ORDER BY embedding <=> ${embeddingStr}::vector
       LIMIT ${TOP_K}
     `
-  } else {
-    results = await prisma.$queryRaw<KnowledgeChunk[]>`
-      SELECT id, source, "chapterRef", content
-      FROM "KnowledgeChunk"
-      ORDER BY embedding <=> ${embeddingStr}::vector
-      LIMIT ${TOP_K}
-    `
   }
 
-  return results
+  // Fetch a larger pool ranked by similarity, then enforce source diversity
+  const pool = await prisma.$queryRaw<KnowledgeChunk[]>`
+    SELECT id, source, "chapterRef", content
+    FROM "KnowledgeChunk"
+    ORDER BY embedding <=> ${embeddingStr}::vector
+    LIMIT ${TOP_K_DIVERSE}
+  `
+
+  // Pick top chunks while capping contribution per source
+  const sourceCounts: Record<string, number> = {}
+  const diverse: KnowledgeChunk[] = []
+  for (const chunk of pool) {
+    const count = sourceCounts[chunk.source] ?? 0
+    if (count < MAX_PER_SOURCE) {
+      diverse.push(chunk)
+      sourceCounts[chunk.source] = count + 1
+    }
+    if (diverse.length >= TOP_K) break
+  }
+  return diverse
 }
 
 export async function retrieveChunksForLesson(
@@ -53,13 +65,21 @@ export async function retrieveChunksForLesson(
   const embedding = await embedText(lessonTitle)
   const embeddingStr = `[${embedding.join(',')}]`
 
-  // Retrieve more chunks for lesson generation — top 10
-  const results = await prisma.$queryRaw<KnowledgeChunk[]>`
+  // Retrieve chunks for lesson generation — diverse pool from all sources
+  const pool = await prisma.$queryRaw<KnowledgeChunk[]>`
     SELECT id, source, "chapterRef", content
     FROM "KnowledgeChunk"
     ORDER BY embedding <=> ${embeddingStr}::vector
-    LIMIT 10
+    LIMIT 30
   `
+  // Cap at 2 per source for diversity, keep top 15
+  const sourceCounts: Record<string, number> = {}
+  const results: KnowledgeChunk[] = []
+  for (const chunk of pool) {
+    const count = sourceCounts[chunk.source] ?? 0
+    if (count < 2) { results.push(chunk); sourceCounts[chunk.source] = count + 1 }
+    if (results.length >= 15) break
+  }
   return results
 }
 

@@ -49,7 +49,8 @@ function chunkText(text: string, chunkChars: number, overlapChars: number): stri
       chunks.push(chunk.trim())
     }
 
-    start += chunk.length - overlapChars
+    const advance = chunk.length - overlapChars
+    start += Math.max(advance, Math.floor(chunkChars / 2)) // always advance
   }
 
   return chunks
@@ -126,7 +127,7 @@ async function ingestPDF(source: string, filePath: string, prisma: PrismaClient,
 
   const buffer = fs.readFileSync(filePath)
   const data = await pdf(buffer)
-  const text = data.text
+  const text = data.text.replace(/\x00/g, '')
 
   const chunkChars = CHUNK_SIZE * CHARS_PER_TOKEN
   const overlapChars = CHUNK_OVERLAP * CHARS_PER_TOKEN
