@@ -40,3 +40,10 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 .worktrees/
+
+# screenshots and local tools
+*.png
+*.jpg
+*.jpeg
+.playwright-mcp/
+interview-prep-tool/
