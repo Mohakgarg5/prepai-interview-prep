@@ -259,7 +259,7 @@ export function KnowledgeGrid({
     return matchesCategory && matchesQuery
   })
 
-  const grouped = Object.entries(categoryConfig).reduce<
+  const grouped = Object.entries(CATEGORY_CONFIG).reduce<
     Record<string, FrameworkItem[]>
   >((acc, [key]) => {
     const items = filtered.filter((f) => f.categoryKey === key)
@@ -282,7 +282,7 @@ export function KnowledgeGrid({
         >
           All ({frameworks.length})
         </button>
-        {Object.entries(categoryConfig).map(([key, config]) => {
+        {Object.entries(CATEGORY_CONFIG).map(([key, config]) => {
           const Icon = config.icon
           const count = frameworks.filter((f) => f.categoryKey === key).length
           return (
@@ -322,7 +322,7 @@ export function KnowledgeGrid({
             <FrameworkCard
               key={item.slug}
               item={item}
-              config={categoryConfig[item.categoryKey]}
+              config={CATEGORY_CONFIG[item.categoryKey]}
             />
           ))}
         </div>
@@ -330,7 +330,7 @@ export function KnowledgeGrid({
         // All categories grouped
         <div className="space-y-8">
           {Object.entries(grouped).map(([catKey, items]) => {
-            const config = categoryConfig[catKey]
+            const config = CATEGORY_CONFIG[catKey]
             const Icon = config.icon
             return (
               <section key={catKey}>
