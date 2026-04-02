@@ -3,60 +3,10 @@ import { redirect } from 'next/navigation'
 import { FRAMEWORKS_DATA } from '@/lib/constants'
 import { KnowledgeSearch } from '@/components/shared/KnowledgeSearch'
 import { KnowledgeGrid } from '@/components/shared/KnowledgeGrid'
-import {
-  BarChart2,
-  Target,
-  TrendingUp,
-  MessageSquare,
-  Brain,
-  BookOpen,
-} from 'lucide-react'
+import { BookOpen } from 'lucide-react'
 import { Suspense } from 'react'
 
-const CATEGORY_CONFIG = {
-  prioritization: {
-    label: 'Prioritization',
-    icon: BarChart2,
-    color: 'text-blue-400',
-    bg: 'bg-blue-900/30',
-    border: 'border-blue-800/50',
-    dot: 'bg-blue-500',
-  },
-  metrics: {
-    label: 'Metrics',
-    icon: TrendingUp,
-    color: 'text-emerald-400',
-    bg: 'bg-emerald-900/30',
-    border: 'border-emerald-800/50',
-    dot: 'bg-emerald-500',
-  },
-  strategy: {
-    label: 'Product Strategy',
-    icon: Target,
-    color: 'text-violet-400',
-    bg: 'bg-violet-900/30',
-    border: 'border-violet-800/50',
-    dot: 'bg-violet-500',
-  },
-  communication: {
-    label: 'Communication',
-    icon: MessageSquare,
-    color: 'text-amber-400',
-    bg: 'bg-amber-900/30',
-    border: 'border-amber-800/50',
-    dot: 'bg-amber-500',
-  },
-  aipm: {
-    label: 'AI-PM Concepts',
-    icon: Brain,
-    color: 'text-pink-400',
-    bg: 'bg-pink-900/30',
-    border: 'border-pink-800/50',
-    dot: 'bg-pink-500',
-  },
-} as const
-
-type CategoryKey = keyof typeof CATEGORY_CONFIG
+export type CategoryKey = 'prioritization' | 'metrics' | 'strategy' | 'communication' | 'aipm'
 
 const ALL_FRAMEWORKS = Object.entries(FRAMEWORKS_DATA).flatMap(([cat, items]) =>
   items.map((item) => ({ ...item, categoryKey: cat as CategoryKey }))
@@ -94,17 +44,13 @@ export default async function KnowledgePage({
         </Suspense>
       </div>
 
-      {/* Category filter pills */}
-      <div className="flex flex-wrap gap-2">
-        <Suspense>
-          <KnowledgeGrid
-            frameworks={ALL_FRAMEWORKS}
-            categoryConfig={CATEGORY_CONFIG}
-            query={query}
-            activeCategory={activeCategory}
-          />
-        </Suspense>
-      </div>
+      <Suspense>
+        <KnowledgeGrid
+          frameworks={ALL_FRAMEWORKS}
+          query={query}
+          activeCategory={activeCategory}
+        />
+      </Suspense>
     </div>
   )
 }
